@@ -11,7 +11,7 @@ def check_expired(outfile='expired.txt', metadata_url=None):
     if not metadata_url:
         return None
 
-    print "Checking for expired datasets from " + metadata_url
+    # print "Checking for expired datasets from " + metadata_url
     data = requests.get(metadata_url).json()
     packages = data['packages']
 

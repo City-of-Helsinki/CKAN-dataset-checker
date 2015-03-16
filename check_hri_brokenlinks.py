@@ -42,7 +42,7 @@ def check_links(outfile='notfound.txt', metadata_url=None):
     if not metadata_url:
         return None
 
-    print "Checking for broken links from " + metadata_url
+    # print "Checking for broken links from " + metadata_url
     notfound_count = 0
 
     resources = load_metadata(metadata_url)

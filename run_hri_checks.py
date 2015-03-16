@@ -28,5 +28,5 @@ if __name__=='__main__':
     expired_count = check_expired(EXPIRED_OUTFILE_NAME, METADATA_URL)
     # print 'Expired: ', expired_count
 
-    print 'Sending mail'
+    # print 'Sending mail'
     send_mail(RECIPIENT_LIST, SENDER, TITLE, BODY.format(notfound_count, expired_count), files=[NOTFOUND_OUTFILE_NAME, EXPIRED_OUTFILE_NAME], server='localhost')
