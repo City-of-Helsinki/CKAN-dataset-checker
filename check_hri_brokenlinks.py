@@ -1,13 +1,14 @@
 # encoding: utf-8
 import os
 import sys
-from urllib2 import urlopen
-import urllib2
-import urlparse
+from urllib.request import urlopen
+import urllib.request, urllib.error, urllib.parse
+import urllib.parse
 import json
+import socket
 
 # From the werkzeug-project: https://github.com/mitsuhiko/werkzeug/blob/master/werkzeug/urls.py
-import urllib
+import urllib.request, urllib.parse, urllib.error
 def url_fix(s, charset='utf-8'):
     """Sometimes you get an URL by a user that just isn't a real
     URL because it contains unsafe characters like ' ' and so on.  This
@@ -20,12 +21,12 @@ def url_fix(s, charset='utf-8'):
     :param charset: The target charset for the URL if the url was
                     given as unicode string.
     """
-    if isinstance(s, unicode):
-        s = s.encode(charset, 'ignore')
-    scheme, netloc, path, qs, anchor = urlparse.urlsplit(s)
-    path = urllib.quote(path, '/%')
-    qs = urllib.quote_plus(qs, ':&=')
-    return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))
+#    if isinstance(s, str):
+#        s = s.encode(charset, 'ignore')
+    scheme, netloc, path, qs, anchor = urllib.parse.urlsplit(s)
+    path = urllib.parse.quote(path, '/%')
+    qs = urllib.parse.quote_plus(qs, ':&=')
+    return urllib.parse.urlunsplit((scheme, netloc, path, qs, anchor))
 
 def iterate_resources(packages):
     for package in packages:
@@ -35,14 +36,14 @@ def iterate_resources(packages):
 
 def load_metadata(url):
     metadata = json.load(urlopen(url))
-    packages = metadata['packages']
+    packages = metadata['result']
     return list(iterate_resources(packages))
 
 def check_links(outfile='notfound.txt', metadata_url=None):
     if not metadata_url:
         return None
 
-    # print "Checking for broken links from " + metadata_url
+    print("Checking for broken links from " + metadata_url)
     notfound_count = 0
 
     resources = load_metadata(metadata_url)
@@ -53,21 +54,29 @@ def check_links(outfile='notfound.txt', metadata_url=None):
             # print 'Checking broken link for ', resource['url']
             data = urlopen(resource['url'], timeout=5)
 
-        except urllib2.HTTPError, e:
+        except urllib.error.HTTPError as e:
             # print >>sys.stderr, e, 'at', resource['url']
-            notfound.write(e.reason + ' at ' + resource['url'] + ', from ' + resource['package']['ckan_url'] + '\n')
+            #import pprint;
+            #pprint.pprint(resource)
+            notfound.write(e.reason + ' at ' + resource['url'] + ', from ' + resource['package']['id'] + '\n')
             notfound_count += 1
             continue
 
-        except urllib2.URLError, e:
+        except urllib.error.URLError as e:
             # print >>sys.stderr, e, 'at', resource['url']
-            notfound.write('Something went wrong at ' + resource['url'] + ', from ' + resource['package']['ckan_url'] + '\n')
+            notfound.write('Something went wrong at ' + resource['url'] + ', from ' + resource['package']['id'] + '\n')
             notfound_count += 1
             continue
 
-        except Exception, e:
+        except socket.timeout as e:
+            notfound.write(f"Connection timed out at {resource['url']}, from {resource['package']['id']}\n")
+            continue
+
+        except Exception as e:
             # print >>sys.stderr, e, 'at', resource['url']
-            notfound.write('Error: ' + e.message + ', at ' + resource['url'] + ', from ' + resource['package']['ckan_url'] + '\n')
+            print(vars(e))
+            print(type(e))
+            notfound.write(f"Error: {e}, at {resource['url']}, from {resource['package']['id']}\n")
             notfound_count += 1
             continue
 
