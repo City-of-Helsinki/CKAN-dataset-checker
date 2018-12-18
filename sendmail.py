@@ -1,35 +1,28 @@
 # -*- coding: utf-8 -*-
 import smtplib
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEBase import MIMEBase
-from email.MIMEText import MIMEText
-from email.Utils import COMMASPACE, formatdate
-from email import Encoders
+from email.message import EmailMessage
+
+from email.utils import COMMASPACE, formatdate
+#from email import Encoders
 import os
 
 def send_mail(to, fro, subject, text, files=[],server="localhost"):
     assert type(to)==list
     assert type(files)==list
 
-    msg = MIMEMultipart()
+    msg = EmailMessage()
     msg['From'] = fro
     msg['To'] = COMMASPACE.join(to)
-    msg['Date'] = formatdate(localtime=True)
+    #msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = subject.encode('utf-8')
 
-    msg.attach( MIMEText(text.encode('utf-8')) )
-
     for file in files:
-        part = MIMEBase('application', "octet-stream")
-        part.set_payload( open(file,"rb").read() )
-        Encoders.encode_base64(part)
-        part.add_header('Content-Disposition', 'attachment; filename="%s"'
-                       % os.path.basename(file))
-        msg.attach(part)
+        with open(file, "rb") as fp:
+            file_data = fp.read()
+        msg.add_attachment(file_data, maintype="application", subtype="octet-stream")
 
-    smtp = smtplib.SMTP(server)
-    smtp.sendmail(fro, to, msg.as_string() )
-    smtp.close()
+    with smtplib.SMTP(server) as s:
+        s.send_message(msg)
 
 if __name__=='__main__':
     # Example:
