@@ -42,5 +42,6 @@ if __name__=='__main__':
             report_data = fp.read()
         msg.add_attachment(report_data, maintype="text", subtype="plain")
 
-    with smtplib.SMTP('localhost') as s:
+    with smtplib.SMTP(conf['DEFAULT']['smtp_server']) as s:
+        s.login(conf['DEFAULT']['smtp_user'], conf['DEFAULT']['smtp_pass'])
         s.send_message(msg)
