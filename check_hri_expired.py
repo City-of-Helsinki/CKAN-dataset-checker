@@ -17,7 +17,7 @@ def check_expired(outfile='expired.txt', metadata_url=None):
 
     with codecs.open(outfile, 'w', encoding='utf8') as reportfile:
 
-        reportfile.write('url,date_updated,update_frequency\n')
+        reportfile.write('name,id,date_updated,update_frequency\n')
         expired_count = 0
         for package in packages:
             # if package has update information we check do a simple heuristic check
@@ -41,7 +41,7 @@ def check_expired(outfile='expired.txt', metadata_url=None):
                                 update_frequency = package['update_frequency']['fi']
                             except KeyError as e:
                                 update_frequency = "update frequency not defined"
-                            reportfile.write("{},{},{}\n".format(package['id'], package['date_updated'], update_frequency))
+                            reportfile.write("{},{},{},{}\n".format(package['name'], package['id'], package['date_updated'], update_frequency))
                             expired_count += 1
                         except KeyError as e:
                             print("Data record misshapen while reading update_frequency:")

@@ -8,7 +8,6 @@ import json
 import socket
 
 # From the werkzeug-project: https://github.com/mitsuhiko/werkzeug/blob/master/werkzeug/urls.py
-import urllib.request, urllib.parse, urllib.error
 def url_fix(s, charset='utf-8'):
     """Sometimes you get an URL by a user that just isn't a real
     URL because it contains unsafe characters like ' ' and so on.  This
@@ -49,34 +48,29 @@ def check_links(outfile='notfound.txt', metadata_url=None):
     resources = load_metadata(metadata_url)
     notfound = open(outfile, 'w') # just overwrite it
     for resource in resources:
-        id = resource['package']['name']
+        package_name = resource['package']['name']
+        url = resource['url']
         try:
-            # print 'Checking broken link for ', resource['url']
-            data = urlopen(resource['url'], timeout=5)
+            data = urlopen(url, timeout=5)
 
         except urllib.error.HTTPError as e:
-            # print >>sys.stderr, e, 'at', resource['url']
-            #import pprint;
-            #pprint.pprint(resource)
-            notfound.write(e.reason + ' at ' + resource['url'] + ', from ' + resource['package']['id'] + '\n')
+            notfound.write(f"{e.reason} at {url}, from {package_name}\n")
             notfound_count += 1
             continue
 
         except urllib.error.URLError as e:
-            # print >>sys.stderr, e, 'at', resource['url']
-            notfound.write('Something went wrong at ' + resource['url'] + ', from ' + resource['package']['id'] + '\n')
+            notfound.write(f"Something went wrong at {url}, from {package_name}\n")
             notfound_count += 1
             continue
 
         except socket.timeout as e:
-            notfound.write(f"Connection timed out at {resource['url']}, from {resource['package']['id']}\n")
+            notfound.write(f"Connection timed out at {url}, from {package_name}\n")
             continue
 
         except Exception as e:
-            # print >>sys.stderr, e, 'at', resource['url']
             print(vars(e))
             print(type(e))
-            notfound.write(f"Error: {e}, at {resource['url']}, from {resource['package']['id']}\n")
+            notfound.write(f"Error: {e}, at {url}, from {package_name}\n")
             notfound_count += 1
             continue
 
